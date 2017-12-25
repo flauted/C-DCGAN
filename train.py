@@ -116,6 +116,9 @@ def run_training():
     # Loop variables
     epochs_per_dset = int(DSET_SIZE * (1-FLAGS.test_size) / FLAGS.batch_size)
 
+    if not FLAGS.no_save:
+        saver = tf.train.Saver()
+
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         print("\n    $ tensorboard --logdir={}\n".format(FLAGS.tb_dir))
@@ -127,6 +130,8 @@ def run_training():
         for epoch in range(FLAGS.epochs):
             # Iteration actions
             test_and_print = epoch % FLAGS.eval_freq == 0
+            checkpoint = (
+                test_and_print and epoch > 10e3 and not FLAGS.no_save)
             add_train_summary = epoch % 500 == 0
             train_discriminator = epoch % 1 == 0
 
@@ -148,11 +153,18 @@ def run_training():
                     [d_loss, d_train, summary_op],
                     feed_dict={is_train: True})
 
+            # Always train generator
             g_loss_curr, _, summary = sess.run(
                 [g_loss, g_train, summary_op], feed_dict={is_train: True})
 
             if add_train_summary:
                 train_writer.add_summary(summary, epoch)
+
+            if checkpoint:
+                save_path = saver.save(
+                    sess, os.path.join(FLAGS.ckpt_dir,
+                                       (FLAGS.ckpt_name+str(epoch)+".ckpt")))
+                runlogger.info("Model saved in {}".format(save_path))
 
             if test_and_print:
                 trlogger.info("D_loss {:.4}, G_loss {:.4}".format(
@@ -182,6 +194,8 @@ def main(_):
         FLAGS.tb_dir, FLAGS.tb_tr_path, FLAGS.tb_te_path, FLAGS.save_folder)
     utils.hparam_file(FLAGS.save_folder, vars(FLAGS))
     run_training()
+    if not FLAGS.no_save:
+        utils.freeze_graph(FLAGS.ckpt_dir)
 
 
 if __name__ == "__main__":
@@ -218,7 +232,7 @@ if __name__ == "__main__":
         help="Number of images to save to save_folder in eval")
     parser.add_argument(
         "-tfr", "--tfr_dir", type=str,
-        default="./TFR",
+        default=os.path.abspath("./TFR"),
         help="Path for folder containing .tfrecords")
     parser.add_argument(
         "--tfr_train", type=str, default="train",
@@ -228,7 +242,7 @@ if __name__ == "__main__":
         help="Filename for test .tfrecords from --tfr_dir.")
     parser.add_argument(
         "-tb", "--tb_dir", type=str,
-        default="./TB",
+        default=os.path.abspath("./TB"),
         help="Path for folder containing TensorBoard data.")
     parser.add_argument(
         "--tb_train", type=str, default="train",
@@ -238,15 +252,28 @@ if __name__ == "__main__":
         help="TensorBoard extension for validation data.")
     parser.add_argument(
         "--data_dir", type=str,
-        default="./CelebaData",
+        default=os.path.abspath("./CelebaData"),
         help="Path to folder of images.")
     parser.add_argument(
         "--anno_path", type=str,
-        default="./list_attr_celeba.txt",
+        default=os.path.abspath("./list_attr_celeba.txt"),
         help="Path to folder of images.")
     parser.add_argument(
         "--save_folder", type=str, default="./out",
         help="Path to visualization folder.")
+    parser.add_argument(
+        "--no_save", action="store_true", default=False,
+        help="Do not save model.")
+    parser.add_argument(
+        "--ckpt_dir",
+        type=str,
+        default=os.path.abspath("./ckpt"),
+        help="Location to save .ckpt on testing improvement.")
+    parser.add_argument(
+        "--ckpt_name",
+        type=str,
+        default="c-dcgan",
+        help="The .ckpt filename (will have epoch and extension appended).")
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.tfr_tr_path = os.path.join(FLAGS.tfr_dir, FLAGS.tfr_train)
     FLAGS.tfr_te_path = os.path.join(FLAGS.tfr_dir, FLAGS.tfr_test)

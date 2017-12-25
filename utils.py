@@ -5,6 +5,7 @@ import math
 import itertools
 import time
 import tensorflow as tf
+from tensorflow.python.framework import graph_util
 import numpy as np
 import sklearn.model_selection as sk
 from cv2 import resize
@@ -268,3 +269,26 @@ def hparam_file(save_folder, hparam_dict):
         f.write("\n\n" + time.asctime())
         for key, val in hparam_dict.items():
             f.write("\n" + str(key) + ": " + str(val))
+
+
+def freeze_graph(checkpoint_folder):
+    """Export a checkpointed graph for API use."""
+    checkpoint = tf.train.get_checkpoint_state(checkpoint_folder)
+    input_checkpoint = checkpoint.model_checkpoint_path
+    absolute_model_folder = "/".join(input_checkpoint.split('/')[:-1])
+    output_graph = absolute_model_folder + "/frozen_model.pb"
+    output_node_names = ["FORMAT"]
+    # clear_devices = True
+    graph = tf.get_default_graph()
+    input_graph_def = graph.as_graph_def()
+    saver = tf.train.Saver()
+    print("\nSaving evaluated model.")
+    with tf.Session() as sess:
+        saver.restore(sess, input_checkpoint)
+        output_graph_def = graph_util.convert_variables_to_constants(
+            sess, input_graph_def, output_node_names)
+        with tf.gfile.GFile(output_graph, "wb") as f:
+            f.write(output_graph_def.SerializeToString())
+        print("{} ops in the frozen graph.".format(
+            len(output_graph_def.node)))
+        print("Saved at {}".format(output_graph))
