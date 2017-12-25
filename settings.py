@@ -1,0 +1,16 @@
+"""Settings for CelebaGAN.
+
+Use this module to set TFR size, input shapes, and batched input shapes.
+Leave input shape and TFR shape as separate "macros." Preprocessing could
+make these values different.
+"""
+DISK_IMAGE_ROWS, DISK_IMAGE_COLS, DISK_IMAGE_CHANNELS = 178, 218, 3
+TFR_ROWS, TFR_COLS, TFR_CHANNELS = 64, 64, 3
+INPUT_ROWS, INPUT_COLS, INPUT_DEPTH = TFR_ROWS, TFR_COLS, TFR_CHANNELS
+
+HWC_INPUT_SHAPE = [INPUT_ROWS, INPUT_COLS, INPUT_DEPTH]
+CHW_INPUT_SHAPE = [INPUT_DEPTH, INPUT_ROWS, INPUT_COLS]
+
+BATCH_SIZE = -1
+BATCHED_CHW_SHAPE = [BATCH_SIZE] + CHW_INPUT_SHAPE
+BATCHED_HWC_SHAPE = [BATCH_SIZE] + HWC_INPUT_SHAPE

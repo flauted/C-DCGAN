@@ -1,0 +1,362 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>utils module &mdash; C-DCGAN 1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="C-DCGAN 1 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> C-DCGAN
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">utils module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">C-DCGAN</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>utils module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-utils">
+<span id="utils-module"></span><h1>utils module<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h1>
+<p>Utilities for classifier GAN.</p>
+<dl class="function">
+<dt id="utils.celeba_input">
+<code class="descclassname">utils.</code><code class="descname">celeba_input</code><span class="sig-paren">(</span><em>tfr_file</em>, <em>batch_size</em>, <em>epochs</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.celeba_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an iterator object to return a shuffled batch of inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tfr_file</strong> – A string placeholder for the tfrecords filenames to use that
+iteration.</li>
+<li><strong>batch_size</strong> – Used to determine size of dataset internal queue.</li>
+<li><strong>epochs</strong> – Used to determine size of dataset internal queue.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>A <code class="docutils literal"><span class="pre">TFRecordDataset</span></code> object full of shuffled batches</dt>
+<dd><p class="first last">of images and feature annotations.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">iterator</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.factor_int">
+<code class="descclassname">utils.</code><code class="descname">factor_int</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.factor_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find integer factors closest to square.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.hparam_file">
+<code class="descclassname">utils.</code><code class="descname">hparam_file</code><span class="sig-paren">(</span><em>save_folder</em>, <em>hparam_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.hparam_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log hyperparameters to a file in save folder.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.plot">
+<code class="descclassname">utils.</code><code class="descname">plot</code><span class="sig-paren">(</span><em>samples</em>, <em>num_to_plot</em>, <em>save_file</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a matplotlib plot of eval images.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.prob_scale">
+<code class="descclassname">utils.</code><code class="descname">prob_scale</code><span class="sig-paren">(</span><em>Prob</em>, <em>img_name</em>, <em>num</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.prob_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an image summary of prob; black and white keep prob from scaling.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.resize">
+<code class="descclassname">utils.</code><code class="descname">resize</code><span class="sig-paren">(</span><em>src</em>, <em>dsize</em><span class="optional">[</span>, <em>dst</em><span class="optional">[</span>, <em>fx</em><span class="optional">[</span>, <em>fy</em><span class="optional">[</span>, <em>interpolation</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span> &#x2192; dst<a class="headerlink" href="#utils.resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>.   &#64;brief Resizes an image.
+.
+.   The function resize resizes the image src down to or up to the specified size. Note that the
+.   initial dst type or size are not taken into account. Instead, the size and type are derived from
+.   the <cite>src</cite>,`dsize`,`fx`, and <cite>fy</cite>. If you want to resize src so that it fits the pre-created dst,
+.   you may call the function as follows:
+.   &#64;code
+.   // explicitly specify dsize=dst.size(); fx and fy will be computed from that.
+.   resize(src, dst, dst.size(), 0, 0, interpolation);
+.   &#64;endcode
+.   If you want to decimate the image by factor of 2 in each direction, you can call the function this
+.   way:
+.   &#64;code
+.   // specify fx and fy and let the function compute the destination image size.
+.   resize(src, dst, Size(), 0.5, 0.5, interpolation);
+.   &#64;endcode
+.   To shrink an image, it will generally look best with cv::INTER_AREA interpolation, whereas to
+.   enlarge an image, it will generally look best with cv::INTER_CUBIC (slow) or cv::INTER_LINEAR
+.   (faster but still looks OK).
+.
+.   &#64;param src input image.
+.   &#64;param dst output image; it has the size dsize (when it is non-zero) or the size computed from
+.   src.size(), fx, and fy; the type of dst is the same as of src.
+.   &#64;param dsize output image size; if it equals zero, it is computed as:
+.   f[texttt{dsize = Size(round(fx*src.cols), round(fy*src.rows))}f]
+.   Either dsize or both fx and fy must be non-zero.
+.   &#64;param fx scale factor along the horizontal axis; when it equals 0, it is computed as
+.   f[texttt{(double)dsize.width/src.cols}f]
+.   &#64;param fy scale factor along the vertical axis; when it equals 0, it is computed as
+.   f[texttt{(double)dsize.height/src.rows}f]
+.   &#64;param interpolation interpolation method, see cv::InterpolationFlags
+.
+.   &#64;sa  warpAffine, warpPerspective, remap</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.setup_directories">
+<code class="descclassname">utils.</code><code class="descname">setup_directories</code><span class="sig-paren">(</span><em>tb_dir</em>, <em>train_path</em>, <em>test_path</em>, <em>save_folder</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.setup_directories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possibly overwrite and create TensorBoard directory.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.time_update">
+<code class="descclassname">utils.</code><code class="descname">time_update</code><span class="sig-paren">(</span><em>start</em>, <em>end</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.time_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a nice stopwatch.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.write_tfrecords">
+<code class="descclassname">utils.</code><code class="descname">write_tfrecords</code><span class="sig-paren">(</span><em>data_dir</em>, <em>anno_path</em>, <em>train_tfr_dir</em>, <em>test_tfr_dir</em>, <em>test_size</em><span class="sig-paren">)</span><a class="headerlink" href="#utils.write_tfrecords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write two tfrecords binary format files.</p>
+<p>Shuffle and split are handled internally.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data_dir</strong> – Path to the folder containing images.</li>
+<li><strong>anno_path</strong> – Path to the annotation folder.</li>
+<li><strong>train_tfr_dir</strong> – Path to the folder where training TFR will be written.</li>
+<li><strong>test_tfr_dir</strong> – Path to the folder where testing TFR will be written.</li>
+<li><strong>test_size</strong> – Number or fraction of images for testing.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Implicit returns:</dt>
+<dd><p class="first">Two  tfrecords file at respective <a href="#id1"><span class="problematic" id="id2">*</span></a>_tfr_dir. Format is</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">features</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;height&quot;</span><span class="p">,</span> <span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+          <span class="s2">&quot;image_raw&quot;</span><span class="p">,</span> <span class="s2">&quot;anno&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dylan Flaute.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

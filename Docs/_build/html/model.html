@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>model module &mdash; C-DCGAN 1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="C-DCGAN 1 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> C-DCGAN
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">model module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">C-DCGAN</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>model module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/model.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-model">
+<span id="model-module"></span><h1>model module<a class="headerlink" href="#module-model" title="Permalink to this headline">¶</a></h1>
+<p>Create a Generator and Discriminator for a GAN network.</p>
+<p>Assume inputs will be NCHW-formatted.</p>
+<dl class="function">
+<dt id="model.conv2d">
+<code class="descclassname">model.</code><code class="descname">conv2d</code><span class="sig-paren">(</span><em>inputs</em>, <em>features_out</em>, <em>kernel_size=(5</em>, <em>5)</em>, <em>stride=(2</em>, <em>2)</em>, <em>padding='SAME'</em>, <em>variables_collections=None</em>, <em>trainable=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model.conv2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve inputs (NCHW) and add bias.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="model.conv2d_T">
+<code class="descclassname">model.</code><code class="descname">conv2d_T</code><span class="sig-paren">(</span><em>inputs</em>, <em>features_out</em>, <em>kernel_size=(5</em>, <em>5)</em>, <em>stride=(2</em>, <em>2)</em>, <em>padding='SAME'</em>, <em>variables_collections=None</em>, <em>trainable=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model.conv2d_T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conv transpose the inputs (NCHW) and add bias.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="model.dense_layer">
+<code class="descclassname">model.</code><code class="descname">dense_layer</code><span class="sig-paren">(</span><em>inputs</em>, <em>size_out</em>, <em>variables_collections=None</em>, <em>trainable=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model.dense_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a dense layer to 2D inputs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="model.discriminator">
+<code class="descclassname">model.</code><code class="descname">discriminator</code><span class="sig-paren">(</span><em>image</em>, <em>anno</em>, <em>training</em>, <em>reuse=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model.discriminator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a discriminator to verify <code class="docutils literal"><span class="pre">image</span></code>.</p>
+<p>Perform usual convolutions on <code class="docutils literal"><span class="pre">image</span></code>. Flatten and concatenate with
+the label tensor <code class="docutils literal"><span class="pre">c</span></code>. Then use a fully-connected layer to reduce to
+a true/false prediction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>image</strong> – The input Tensor.</li>
+<li><strong>anno</strong> – The label Tensor.</li>
+<li><strong>training</strong> – A Python boolean or TensorFlow boolean tensor-like, such
+as <code class="docutils literal"><span class="pre">placeholder</span></code>. This tells <code class="docutils literal"><span class="pre">batch_norm</span></code> when to set
+moving averages.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first"><strong>reuse</strong> – Variable scope control.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A <code class="docutils literal"><span class="pre">batch_size</span> <span class="pre">x</span> <span class="pre">1</span></code> Tensor indicating true/false, the image is real.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Implicit Returns:</dt>
+<dd>All discriminator variables are added to collection <code class="docutils literal"><span class="pre">&quot;D_theta&quot;</span></code>.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="model.generator">
+<code class="descclassname">model.</code><code class="descname">generator</code><span class="sig-paren">(</span><em>anno</em>, <em>training</em>, <em>batch_size</em>, <em>prior_dim=100</em>, <em>reuse=None</em><span class="sig-paren">)</span><a class="headerlink" href="#model.generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a generator using prior_space.</p>
+<p>Randomly generate <cite>z</cite>, the noisy input. Concatenate with labels <cite>c</cite>.
+Use a dense layer to transform the latent space into desired shape.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>anno</strong> – An iterable of given labels.</li>
+<li><strong>training</strong> – A Python boolean or TensorFlow boolean tensor-like, such
+as <code class="docutils literal"><span class="pre">placeholder</span></code>. This tells <code class="docutils literal"><span class="pre">batch_norm</span></code> when to set
+moving averages.</li>
+<li><strong>batch_size</strong> – An integer; used to create random noise.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><ul class="first simple">
+<li><strong>prior_dim</strong> (<em>100</em>) – An integer for the length of random noise.</li>
+<li><strong>reuse</strong> (<em>None</em>) – Variable scope control.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The generated image tensor.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Implicit Returns:</dt>
+<dd>Batch norm update ops are added to <code class="docutils literal"><span class="pre">tf.GraphKeys.UPDATE_OPS</span></code>.
+All generator variables are added to collection <code class="docutils literal"><span class="pre">&quot;G_theta&quot;</span></code>.</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Example of using the update ops</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">batch_norm_update_ops</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">get_collection</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">GraphKeys</span><span class="o">.</span><span class="n">UPDATE_OPS</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">control_dependencies</span><span class="p">(</span><span class="n">batch_norm_update_ops</span><span class="p">):</span>
+    <span class="n">train_op</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">AdamOptimizer</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">)</span><span class="o">.</span><span class="n">minimize</span><span class="p">(</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">var_list</span><span class="o">=</span><span class="s2">&quot;G_theta&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="model.leakyReLU">
+<code class="descclassname">model.</code><code class="descname">leakyReLU</code><span class="sig-paren">(</span><em>inputs</em>, <em>leak=0.2</em>, <em>name='leakyReLU'</em><span class="sig-paren">)</span><a class="headerlink" href="#model.leakyReLU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Leaky ReLU operation.</p>
+<p>Normal ReLU is defined as max(inputs, 0). Leaky ReLU is max(inputs, leak).</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dylan Flaute.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
