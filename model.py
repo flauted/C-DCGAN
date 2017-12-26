@@ -67,7 +67,8 @@ def conv2d_T(inputs,
              variables_collections=None,
              trainable=None):
     """Conv transpose the inputs (NCHW) and add bias."""
-    in_batch, in_depth, in_rows, in_cols = inputs.get_shape().as_list()
+    _, in_depth, in_rows, in_cols = inputs.get_shape().as_list()
+    in_batch = tf.shape(inputs)[0]
     kernel = tf.get_variable(
         "kernel",
         shape=(kernel_size[0],
@@ -83,10 +84,11 @@ def conv2d_T(inputs,
         initializer=tf.zeros_initializer(),
         trainable=trainable)
     tf.add_to_collection(variables_collections, bias)
-    output_shape = (in_batch,
-                    features_out,
-                    int(in_rows * stride[0]),
-                    int(in_cols * stride[1]))
+    output_shape = tf.stack(
+                    [in_batch,
+                     features_out,
+                     int(in_rows * stride[0]),
+                     int(in_cols * stride[1])])
 
     evidence = tf.nn.conv2d_transpose(inputs,
                                       kernel,
@@ -107,7 +109,7 @@ def leakyReLU(inputs, leak=0.2, name="leakyReLU"):
         return tf.maximum(inputs, leak*inputs)
 
 
-def generator(anno, training, batch_size, prior_dim=100, reuse=None):
+def generator(anno, noise, training, reuse=None):
     """Build a generator using prior_space.
 
     Randomly generate `z`, the noisy input. Concatenate with labels `c`.
@@ -141,20 +143,19 @@ def generator(anno, training, batch_size, prior_dim=100, reuse=None):
 
 
     """
-    prior_space = tf.random_uniform(
-        [batch_size, prior_dim], minval=-1, maxval=1, name="prior_space")
     gen_vars = "G_theta" if not reuse else None
     with tf.variable_scope("Generator", reuse=reuse):
-        latent_space = tf.concat([prior_space, anno], 1, name="latent_space")
+        latent_space = tf.concat([noise, anno], 1, name="latent_space")
 
         with tf.variable_scope("Dense1"):
             h_dense = dense_layer(
                 latent_space,
                 4*4*1024,
                 variables_collections=gen_vars)
-        h_dense = tf.reshape(h_dense, [batch_size, 1024, 4, 4])
+        h_dense = tf.reshape(h_dense, [-1, 1024, 4, 4])
         h_dense = tf.layers.batch_normalization(
             h_dense,
+            axis=1,
             training=training,
             name="batch_norm1")
         a_dense = tf.nn.relu(h_dense)
@@ -166,6 +167,7 @@ def generator(anno, training, batch_size, prior_dim=100, reuse=None):
                 variables_collections=gen_vars)
         conv2 = tf.layers.batch_normalization(
             conv2,
+            axis=1,
             training=training,
             name="batch_norm2")
         a_conv2 = tf.nn.relu(conv2)
@@ -177,6 +179,7 @@ def generator(anno, training, batch_size, prior_dim=100, reuse=None):
                 variables_collections=gen_vars)
         conv3 = tf.layers.batch_normalization(
             conv3,
+            axis=1,
             training=training,
             name="batch_norm3")
         a_conv3 = tf.nn.relu(conv3)
@@ -188,6 +191,7 @@ def generator(anno, training, batch_size, prior_dim=100, reuse=None):
                 variables_collections=gen_vars)
         conv4 = tf.layers.batch_normalization(
             conv4,
+            axis=1,
             training=training,
             name="batch_norm4")
         a_conv4 = tf.nn.relu(conv4)

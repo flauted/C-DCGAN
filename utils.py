@@ -1,9 +1,11 @@
 """Utilities for classifier GAN."""
 import os
+import shutil
 import sys
 import math
 import itertools
 import time
+import logging
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
 import numpy as np
@@ -210,8 +212,8 @@ def plot(samples, num_to_plot, save_file):
     plt.close(fig)
 
 
-def setup_directories(tb_dir, train_path, test_path, save_folder):
-    """Possibly overwrite and create TensorBoard directory."""
+def setup_tb_dir(tb_dir, train_path, test_path):
+    """Possibly overwrite and always create TensorBoard directory."""
     # TensorBoard overwrite control.
     while tf.gfile.Exists(train_path) or tf.gfile.Exists(test_path):
         print("\nTensorBoard directory is already written. Overwrite?")
@@ -229,7 +231,9 @@ def setup_directories(tb_dir, train_path, test_path, save_folder):
         else:
             print("Invalid input. Try again: ")
     tf.gfile.MakeDirs(tb_dir)
-    # save folder and hparam overwrite control.
+
+
+def output_overwrite_control(save_folder):
     if os.path.exists(save_folder):
         print("Directory for saving generated images is already written. "
               "Filenames of pattern ###.png will overwrite and hparam.txt "
@@ -244,11 +248,23 @@ def setup_directories(tb_dir, train_path, test_path, save_folder):
         os.makedirs(save_folder)
 
 
+def export_dir_overwrite_control(export_dir):
+    if os.path.exists(export_dir):
+        print("Directory for saving model already exists. The folder {} will "
+              "be deleted. Continue?".format(os.path.abspath(export_dir)))
+        print("[y] proceed, [<enter>] cancel: ")
+        proc = input()
+        if proc != "y":
+            sys.exit()
+        else:
+            shutil.rmtree(export_dir)
+
+
 def time_update(start, end):
     """Print a nice stopwatch."""
     minutes = int((end-start) // 60)
     seconds = (end-start) % 60
-    msg = "Time elapsed: {}:{:05.2f}\n".format(minutes, seconds)
+    msg = "Time elapsed: {}:{:05.2f}".format(minutes, seconds)
     return msg
 
 
@@ -271,8 +287,20 @@ def hparam_file(save_folder, hparam_dict):
             f.write("\n" + str(key) + ": " + str(val))
 
 
+def init_logger(name):
+    """Initialize a logger with nice formatting."""
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(levelname)s: %(name)s: %(message)s")
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    return logger
+
+
 def freeze_graph(checkpoint_folder):
-    """Export a checkpointed graph for API use."""
+    """Unused. Used with saver api. Export a checkpointed graph for API use."""
     checkpoint = tf.train.get_checkpoint_state(checkpoint_folder)
     input_checkpoint = checkpoint.model_checkpoint_path
     absolute_model_folder = "/".join(input_checkpoint.split('/')[:-1])

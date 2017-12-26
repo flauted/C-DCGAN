@@ -4,8 +4,9 @@ import os
 import time
 import argparse
 import sys
-import logging
 import tensorflow as tf
+from tensorflow import saved_model as tfsm
+import numpy as np
 from model import generator, discriminator
 import utils
 
@@ -32,18 +33,6 @@ def train(init_rate, loss, var_list, beta1=0.5, name="Train"):
         train_op = tf.train.AdamOptimizer(init_rate, beta1=beta1).minimize(
             loss, var_list=var_list)
     return train_op
-
-
-def init_logger(name):
-    """Initialize a logger with nice formatting."""
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(levelname)s: %(name)s: %(message)s")
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    return logger
 
 
 def inputs(is_training):
@@ -73,32 +62,37 @@ def inputs(is_training):
     return iterators, image, anno
 
 
+def noisy_space(batch_size, noise_size):
+    """Create noise input for generator."""
+    return np.random.uniform(
+        low=-1, high=1, size=[batch_size, noise_size])
+
+
 def run_training():
     """Run training."""
-    # Initialize logging.
-    trlogger = init_logger("[TR]")
-    telogger = init_logger("[TE]")
-    runlogger = init_logger("run")
+    trlogger = utils.init_logger("[TR]")
+    telogger = utils.init_logger("[TE]")
+    runlogger = utils.init_logger("run")
+
     # Build the graph.
     is_train = tf.placeholder(tf.bool, shape=[], name="is_training")
     iterators, image, anno = inputs(is_train)
-    g_sample = generator(anno, is_train, FLAGS.batch_size)
+    noise = tf.placeholder(tf.float32, shape=[None, 100], name="noise")
+
+    g_img = generator(anno, noise, is_train)
     tf.summary.image(
-        "GENERATED_IMG",
-        tf.transpose(g_sample, [0, 2, 3, 1], name="FORMAT"),
-        1)
+        "GENERATED_IMG", tf.transpose(g_img, [0, 2, 3, 1], name="FORMAT"), 1)
+
     with tf.variable_scope("Discriminator"):
-        d_real = discriminator(
-            image, anno, is_train)
+        d_real = discriminator(image, anno, is_train)
         with tf.variable_scope("ProbSummary"):
             utils.prob_scale(d_real, "DISC_PROB_REAL", 1)
-        d_fake = discriminator(
-            g_sample, anno, is_train, reuse=True)
+        d_fake = discriminator(g_img, anno, is_train, reuse=True)
         with tf.variable_scope("ProbSummary"):
             utils.prob_scale(d_fake, "DISC_PROB_FAKE", 1)
-
         tf.summary.scalar("AvgReal", tf.reduce_mean(d_real))
         tf.summary.scalar("AvgFake", tf.reduce_mean(d_fake))
+
     d_loss, g_loss = goodfellow_loss(d_real, d_fake)
     d_train = train(FLAGS.D_init_rate,
                     d_loss,
@@ -112,12 +106,18 @@ def run_training():
                         tf.get_collection("G_theta"),
                         beta1=FLAGS.beta_1,
                         name="G_train")
-    summary_op = tf.summary.merge_all()
-    # Loop variables
-    epochs_per_dset = int(DSET_SIZE * (1-FLAGS.test_size) / FLAGS.batch_size)
 
+    summary_op = tf.summary.merge_all()
     if not FLAGS.no_save:
-        saver = tf.train.Saver()
+        builder = tfsm.builder.SavedModelBuilder(FLAGS.export_dir)
+        sig = tfsm.signature_def_utils.build_signature_def(
+                inputs={"anno": tfsm.utils.build_tensor_info(anno),
+                        "noise": tfsm.utils.build_tensor_info(noise),
+                        "is_train": tfsm.utils.build_tensor_info(is_train)},
+                outputs={"g_output": tfsm.utils.build_tensor_info(g_img)},
+                method_name=tfsm.signature_constants.PREDICT_METHOD_NAME)
+
+    epochs_per_dset = int(DSET_SIZE * (1-FLAGS.test_size) / FLAGS.batch_size)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -125,53 +125,52 @@ def run_training():
         train_writer = tf.summary.FileWriter(FLAGS.tb_tr_path, sess.graph)
         test_writer = tf.summary.FileWriter(FLAGS.tb_te_path, sess.graph)
         sess.run([iterator.initializer for iterator in iterators])
+        builder.add_meta_graph_and_variables(
+            sess,
+            [tfsm.tag_constants.SERVING],
+            signature_def_map={
+                tfsm.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+                sig})
         start = time.time()
 
-        for epoch in range(FLAGS.epochs):
-            # Iteration actions
-            test_and_print = epoch % FLAGS.eval_freq == 0
-            checkpoint = (
-                test_and_print and epoch > 10e3 and not FLAGS.no_save)
-            add_train_summary = epoch % 500 == 0
-            train_discriminator = epoch % 1 == 0
+        for epoch in range(FLAGS.epochs + 1):
+            # if epoch % 2 == 0:  can give good results too.
+            d_loss_curr, _, summary = sess.run(
+                [d_loss, d_train, summary_op],
+                {is_train: True,
+                 noise: noisy_space(FLAGS.batch_size, FLAGS.prior_dim)})
 
-            if test_and_print:
+            # Always train generator
+            g_loss_curr, _, summary = sess.run(
+                [g_loss, g_train, summary_op],
+                {is_train: True,
+                 noise: noisy_space(FLAGS.batch_size, FLAGS.prior_dim)})
+
+            if epoch % 500 == 0:
+                train_writer.add_summary(summary, epoch)
+
+            if epoch % FLAGS.eval_freq == 0:
+                # test and print
                 samples, d_loss_test, g_loss_test, summary = sess.run(
-                    [g_sample, d_loss, g_loss, summary_op],
-                    feed_dict={is_train: False})
+                    [g_img, d_loss, g_loss, summary_op],
+                    {is_train: False,
+                     noise: noisy_space(FLAGS.batch_size, FLAGS.prior_dim)})
                 runlogger.info("epoch [{}], during est. pass [{}]".format(
                     epoch, epoch // epochs_per_dset))
+                trlogger.info("D_loss {:.4}, G_loss {:.4}".format(
+                    d_loss_curr, g_loss_curr))
                 telogger.info("D_loss {:.4}, G_loss {:.4}".format(
                     d_loss_test, g_loss_test))
                 plot_save_file = FLAGS.save_folder + "/{}.png".format(
                     str(epoch//FLAGS.eval_freq).zfill(3))
                 utils.plot(samples, FLAGS.num_plot, plot_save_file)
                 test_writer.add_summary(summary, epoch)
-
-            if train_discriminator:
-                d_loss_curr, _, summary = sess.run(
-                    [d_loss, d_train, summary_op],
-                    feed_dict={is_train: True})
-
-            # Always train generator
-            g_loss_curr, _, summary = sess.run(
-                [g_loss, g_train, summary_op], feed_dict={is_train: True})
-
-            if add_train_summary:
-                train_writer.add_summary(summary, epoch)
-
-            if checkpoint:
-                save_path = saver.save(
-                    sess, os.path.join(FLAGS.ckpt_dir,
-                                       (FLAGS.ckpt_name+str(epoch)+".ckpt")))
-                runlogger.info("Model saved in {}".format(save_path))
-
-            if test_and_print:
-                trlogger.info("D_loss {:.4}, G_loss {:.4}".format(
-                    d_loss_curr, g_loss_curr))
-                msg = utils.time_update(start, time.time())
-                runlogger.info(msg)
+                runlogger.info(utils.time_update(start, time.time()))
                 start = time.time()
+                if epoch > 10 and not FLAGS.no_save:
+                    builder.save()
+                    runlogger.info("Saving model in {}\n\n".format(
+                        FLAGS.export_dir))
 
         train_writer.close()
         test_writer.close()
@@ -190,12 +189,15 @@ def main(_):
             FLAGS.tfr_tr_path,
             FLAGS.tfr_te_path,
             test_size=FLAGS.test_size)
-    utils.setup_directories(
-        FLAGS.tb_dir, FLAGS.tb_tr_path, FLAGS.tb_te_path, FLAGS.save_folder)
+    utils.setup_tb_dir(
+        FLAGS.tb_dir,
+        FLAGS.tb_tr_path,
+        FLAGS.tb_te_path)
+    utils.output_overwrite_control(FLAGS.save_folder)
+    if not FLAGS.no_save:
+        utils.export_dir_overwrite_control(FLAGS.export_dir)
     utils.hparam_file(FLAGS.save_folder, vars(FLAGS))
     run_training()
-    if not FLAGS.no_save:
-        utils.freeze_graph(FLAGS.ckpt_dir)
 
 
 if __name__ == "__main__":
@@ -265,15 +267,10 @@ if __name__ == "__main__":
         "--no_save", action="store_true", default=False,
         help="Do not save model.")
     parser.add_argument(
-        "--ckpt_dir",
+        "--export_dir",
         type=str,
-        default=os.path.abspath("./ckpt"),
+        default=os.path.abspath("./savedmodel"),
         help="Location to save .ckpt on testing improvement.")
-    parser.add_argument(
-        "--ckpt_name",
-        type=str,
-        default="c-dcgan",
-        help="The .ckpt filename (will have epoch and extension appended).")
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.tfr_tr_path = os.path.join(FLAGS.tfr_dir, FLAGS.tfr_train)
     FLAGS.tfr_te_path = os.path.join(FLAGS.tfr_dir, FLAGS.tfr_test)
