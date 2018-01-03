@@ -5,7 +5,8 @@ import sys
 import math
 import itertools
 import time
-import logging
+import collections
+import json
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
 import numpy as np
@@ -16,6 +17,27 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from settings import TFR_ROWS, TFR_COLS, TFR_CHANNELS
 from settings import HWC_INPUT_SHAPE, CHW_INPUT_SHAPE
+
+
+HEADER = (
+    "Five_o_Clock_Shadow Arched_Eyebrows Attractive Bags_Under_Eyes Bald "
+    "Bangs Big_Lips Big_Nose Black_Hair Blond_Hair Blurry Brown_Hair "
+    "Bushy_Eyebrows Chubby Double_Chin Eyeglasses Goatee Gray_Hair "
+    "Heavy_Makeup High_Cheekbones Male Mouth_Slightly_Open Mustache "
+    "Narrow_Eyes No_Beard Oval_Face Pale_Skin Pointy_Nose Receding_Hairline "
+    "Rosy_Cheeks Sideburns Smiling Straight_Hair Wavy_Hair Wearing_Earrings "
+    "Wearing_Hat Wearing_Lipstick Wearing_Necklace Wearing_Necktie Young")
+
+Classes = collections.namedtuple("Classes", HEADER)
+enum_classes = Classes._make(range(40))
+
+
+def save_config(classes_str, filename=None):
+    state = [False] * 40
+    for cls in classes_str.split():
+        state[getattr(enum_classes, cls)] = True
+    chosen_classes = Classes._make(state)
+    json.dump(chosen_classes._asdict(), open(filename, "w"))
 
 
 def _get_image_paths(data_dir):
@@ -128,14 +150,13 @@ def write_tfrecords(
     _write_data_tfr(test_paths, test_annos, test_tfr_dir)
 
 
-def celeba_input(tfr_file, batch_size, epochs):
+def celeba_input(tfr_file, batch_size, classes):
     """Create an iterator object to return a shuffled batch of inputs.
 
     Args:
         tfr_file: A string placeholder for the tfrecords filenames to use that
             iteration.
         batch_size: Used to determine size of dataset internal queue.
-        epochs: Used to determine size of dataset internal queue.
 
     Returns:
         iterator: A ``TFRecordDataset`` object full of shuffled batches
@@ -163,13 +184,13 @@ def celeba_input(tfr_file, batch_size, epochs):
         image = tf.cast(image_resized, tf.float32) * (2. / 255) - 1
         anno = tf.reshape(anno, [40])
         anno = tf.cast(anno, tf.float32)
+        anno = tf.gather(
+            anno, [getattr(enum_classes, cls) for cls in classes.split()])
         return image, anno
 
     dataset = dataset.map(parsed_proto_to_model_input)
-    dataset = dataset.shuffle(buffer_size=1000)
-    dataset = dataset.repeat(batch_size * epochs)
+    dataset = dataset.shuffle(buffer_size=10000)
     dataset = dataset.batch(batch_size)
-    dataset = dataset.repeat(epochs)
     return dataset
 
 
@@ -193,7 +214,7 @@ def prob_scale(Prob, img_name, num):
     tf.summary.image(img_name, scale_img, num)
 
 
-def plot(samples, num_to_plot, save_file):
+def plot(samples, num_to_plot, save_file, save=True, show=False):
     """Make a matplotlib plot of eval images."""
     samples = np.transpose(samples, [0, 2, 3, 1])
     samples = (samples + 1)/2
@@ -208,7 +229,10 @@ def plot(samples, num_to_plot, save_file):
         ax.set_yticklabels([])
         ax.set_aspect('equal')
         plt.imshow(sample.reshape(HWC_INPUT_SHAPE))
-    plt.savefig(save_file, bbox_inches="tight")
+    if save:
+        plt.savefig(save_file, bbox_inches="tight")
+    if show:
+        plt.show()
     plt.close(fig)
 
 
@@ -264,7 +288,7 @@ def time_update(start, end):
     """Print a nice stopwatch."""
     minutes = int((end-start) // 60)
     seconds = (end-start) % 60
-    msg = "Time elapsed: {}:{:05.2f}".format(minutes, seconds)
+    msg = "Time elapsed: {}:{:05.2f}\n".format(minutes, seconds)
     return msg
 
 
@@ -285,18 +309,6 @@ def hparam_file(save_folder, hparam_dict):
         f.write("\n\n" + time.asctime())
         for key, val in hparam_dict.items():
             f.write("\n" + str(key) + ": " + str(val))
-
-
-def init_logger(name):
-    """Initialize a logger with nice formatting."""
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(levelname)s: %(name)s: %(message)s")
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
-    return logger
 
 
 def freeze_graph(checkpoint_folder):
