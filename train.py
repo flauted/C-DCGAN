@@ -5,7 +5,6 @@ import time
 import argparse
 import logging
 import sys
-import pickle
 import tensorflow as tf
 from tensorflow import saved_model as tfsm
 from model import generator, discriminator
@@ -297,4 +296,5 @@ if __name__ == "__main__":
     FLAGS.tfr_te_path = os.path.join(FLAGS.tfr_dir, FLAGS.tfr_test)
     FLAGS.tb_tr_path = os.path.join(FLAGS.tb_dir, FLAGS.tb_train)
     FLAGS.tb_te_path = os.path.join(FLAGS.tb_dir, FLAGS.tb_test)
+    FLAGS.classes = FLAGS.classes.split(" ")
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

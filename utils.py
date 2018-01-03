@@ -5,7 +5,6 @@ import sys
 import math
 import itertools
 import time
-import collections
 import json
 import tensorflow as tf
 from tensorflow.python.framework import graph_util
@@ -28,16 +27,11 @@ HEADER = (
     "Rosy_Cheeks Sideburns Smiling Straight_Hair Wavy_Hair Wearing_Earrings "
     "Wearing_Hat Wearing_Lipstick Wearing_Necklace Wearing_Necktie Young")
 
-Classes = collections.namedtuple("Classes", HEADER)
-enum_classes = Classes._make(range(40))
 
 
-def save_config(classes_str, filename=None):
-    state = [False] * 40
-    for cls in classes_str.split():
-        state[getattr(enum_classes, cls)] = True
-    chosen_classes = Classes._make(state)
-    json.dump(chosen_classes._asdict(), open(filename, "w"))
+def save_config(split_attrs, filename=None):
+    config = {attr: idx for idx, attr in enumerate(split_attrs)}
+    json.dump(config, open(filename, "w"))
 
 
 def _get_image_paths(data_dir):
@@ -150,7 +144,7 @@ def write_tfrecords(
     _write_data_tfr(test_paths, test_annos, test_tfr_dir)
 
 
-def celeba_input(tfr_file, batch_size, classes):
+def celeba_input(tfr_file, batch_size, split_attrs):
     """Create an iterator object to return a shuffled batch of inputs.
 
     Args:
@@ -185,7 +179,7 @@ def celeba_input(tfr_file, batch_size, classes):
         anno = tf.reshape(anno, [40])
         anno = tf.cast(anno, tf.float32)
         anno = tf.gather(
-            anno, [getattr(enum_classes, cls) for cls in classes.split()])
+            anno, [HEADER.split(" ").index(attr) for attr in split_attrs])
         return image, anno
 
     dataset = dataset.map(parsed_proto_to_model_input)
