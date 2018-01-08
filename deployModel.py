@@ -18,10 +18,9 @@ def noisy_space(batch_size, noise_size=100):
 
 
 def main(_):
-    desired_label = -np.ones([BATCH_SIZE, len(options)])
-    for i in range(len(options)):
-        if options[i] in classes:
-            desired_label[:, i] = True
+    condition_vec = -np.ones([BATCH_SIZE, len(saved_config)])
+    for choice_key in chosen_classes.split(" "):
+        condition_vec[:, saved_config[choice_key]] = True
 
     signature_key = (tf.saved_model.signature_constants.
                      DEFAULT_SERVING_SIGNATURE_DEF_KEY)
@@ -29,7 +28,6 @@ def main(_):
     istrain_key = "is_train"
     noise_key = "noise"
     output_key = "g_output"
-
 
     with tf.Session() as sess:
         meta_graph_def = tf.saved_model.loader.load(
@@ -50,7 +48,7 @@ def main(_):
 
         y_out = sess.run(
             g_img,
-            feed_dict={c: desired_label,
+            feed_dict={c: condition_vec,
                        noise: noisy_space(BATCH_SIZE),
                        is_train: False})
 
@@ -66,10 +64,9 @@ if __name__ == "__main__":
         default=os.path.abspath("./savedmodel"),
         help="Folder containing the model.")
     FLAGS, unparsed = parser.parse_known_args()
-    configured_classes = json.load(
+    saved_config = json.load(
         open(os.path.join(FLAGS.model_dir, "classes.json"), "r"))
-    options = [key for key, val in configured_classes.items() if val]
-    classes = input(("Enter your choices of the following "
-                     "separated with spaces [{}]: \n").format(
-                         " ".join(options)))
+    chosen_classes = input(
+        ("Enter your choices of the following separated with spaces [{}]: "
+         " \n").format(" ".join(saved_config.keys())))
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)

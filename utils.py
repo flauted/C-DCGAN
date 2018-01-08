@@ -28,7 +28,6 @@ HEADER = (
     "Wearing_Hat Wearing_Lipstick Wearing_Necklace Wearing_Necktie Young")
 
 
-
 def save_config(split_attrs, filename=None):
     config = {attr: idx for idx, attr in enumerate(split_attrs)}
     json.dump(config, open(filename, "w"))
@@ -62,8 +61,8 @@ def _get_image_annos(anno_file):
     for anno_and_filename in file_annos[2:]:  # Skip 2 headers
         anno_string = anno_and_filename.split(".jpg")[1]
         anno_strs_and_nulls = anno_string.split(" ")
-        annos.append([
-            int(anno) for anno in anno_strs_and_nulls if anno is not ""])
+        annos.append(
+            [int(anno) for anno in anno_strs_and_nulls if anno is not ""])
     return annos
 
 
@@ -157,9 +156,7 @@ def celeba_input(tfr_file, batch_size, split_attrs):
             of images and feature annotations.
 
     """
-    dataset = tf.data.TFRecordDataset(tfr_file)
-
-    def parse_protocol_buffer(example_proto):
+    def _parse_tfrecord(example_proto):
         """Map tfrecords format proto to Python format."""
         features = {'image_raw': tf.FixedLenFeature((), tf.string),
                     'anno': tf.FixedLenFeature((40), tf.int64)}
@@ -167,9 +164,7 @@ def celeba_input(tfr_file, batch_size, split_attrs):
             example_proto, features)
         return parsed_features['image_raw'], parsed_features["anno"]
 
-    dataset = dataset.map(parse_protocol_buffer)
-
-    def parsed_proto_to_model_input(image_string, anno):
+    def _parsed_to_input(image_string, anno):
         """Map parsed protos to intended format."""
         image_decoded = tf.decode_raw(image_string, tf.uint8)
         image_resized = tf.reshape(
@@ -182,7 +177,9 @@ def celeba_input(tfr_file, batch_size, split_attrs):
             anno, [HEADER.split(" ").index(attr) for attr in split_attrs])
         return image, anno
 
-    dataset = dataset.map(parsed_proto_to_model_input)
+    dataset = tf.data.TFRecordDataset(tfr_file)
+    dataset = dataset.map(_parse_tfrecord)
+    dataset = dataset.map(_parsed_to_input)
     dataset = dataset.shuffle(buffer_size=10000)
     dataset = dataset.batch(batch_size)
     return dataset
@@ -234,12 +231,22 @@ def setup_tb_dir(tb_dir, train_path, test_path):
     """Possibly overwrite and always create TensorBoard directory."""
     # TensorBoard overwrite control.
     while tf.gfile.Exists(train_path) or tf.gfile.Exists(test_path):
-        print("\nTensorBoard directory is already written. Overwrite?")
+        train_exists = tf.gfile.Exists(train_path)
+        test_exists = tf.gfile.Exists(test_path)
+        if train_exists and test_exists:
+            paths = train_path + "\n " + test_path
+        elif train_exists:
+            paths = train_path
+        elif test_exists:
+            paths = test_path
+        print("\nTensorBoard directory(ies) \n {}\nalready written.\n"
+              "Delete {}?".format(paths, tb_dir))
         print("[y] proceed, [<enter>] cancel: ")
         proc = input()
         if proc == 'y':
             try:
                 tf.gfile.DeleteRecursively(tb_dir)
+                # If all goes well, loop breaks!
             except Exception as e:
                 raise PermissionError(
                     "Cannot overwrite tb_dir. TensorBoard (Localhost:6006) "
@@ -247,35 +254,48 @@ def setup_tb_dir(tb_dir, train_path, test_path):
         elif proc == "":
             sys.exit()
         else:
-            print("Invalid input. Try again: ")
+            print("Invalid input '{}'.".format(proc))
+            # File still exists, loop continues.
     tf.gfile.MakeDirs(tb_dir)
 
 
 def output_overwrite_control(save_folder):
+    """Possibly remove ``hparam.txt`` from ``save_folder``."""
     if os.path.exists(save_folder):
-        print("Directory for saving generated images is already written. "
-              "Filenames of pattern ###.png will overwrite and hparam.txt "
-              "will be deleted. Continue?")
-        print("[y] proceed, [<enter>] cancel: ")
-        proc = input()
-        if proc != "y":
-            sys.exit()
-        elif os.path.exists(save_folder + "/hparam.txt"):
-            os.remove(save_folder + "/hparam.txt")
-    else:
-        os.makedirs(save_folder)
+        # We're NOT going to delete saved image dir JUST IN CASE. So break if
+        # overwrite is accepted.
+        while True:
+            print("\nGenerated image save directory \n {}\nis already "
+                  "written. Filenames of pattern ###.png will overwrite "
+                  "during training and hparam.txt will be deleted now (if "
+                  "exists). Continue?".format(save_folder))
+            print("[y] proceed, [<enter>] cancel: ")
+            proc = input()
+            if proc == "y":
+                if os.path.exists(save_folder + "/hparam.txt"):
+                    os.remove(save_folder + "/hparam.txt")
+                break
+            elif proc == "":
+                sys.exit()
+            else:
+                print("Invalid input '{}'.".format(proc))
 
 
 def export_dir_overwrite_control(export_dir):
-    if os.path.exists(export_dir):
-        print("Directory for saving model already exists. The folder {} will "
-              "be deleted. Continue?".format(os.path.abspath(export_dir)))
+    """Possibly overwrite model export directory."""
+    while os.path.exists(export_dir):
+        # export_dir MUST NOT EXIST on save, so we delete it.
+        print("\nModel save directory \n {}\nalready exists. The folder "
+              "will be deleted. Continue?".format(export_dir))
         print("[y] proceed, [<enter>] cancel: ")
         proc = input()
-        if proc != "y":
+        if proc == "y":
+            shutil.rmtree(export_dir)
+            # Should break here!
+        elif proc == "":
             sys.exit()
         else:
-            shutil.rmtree(export_dir)
+            print("Invalid input '{}'.".format(proc))
 
 
 def time_update(start, end):

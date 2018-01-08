@@ -65,14 +65,8 @@ def inputs(is_training):
     return (train_iterator, test_iterator), image, anno
 
 
-def run_training():
-    """Run training."""
-    # Build the graph.
-    is_train = tf.placeholder(tf.bool, shape=[], name="is_training")
-    iterators, image, anno = inputs(is_train)
-    noise = tf.random_uniform(
-        tf.stack([tf.shape(anno)[0], FLAGS.prior_dim]), minval=-1, maxval=1)
-
+def build_graph(image, anno, is_train, noise):
+    """Construct the GAN graph."""
     g_img = generator(anno, noise, is_train)
     tf.summary.image("G_IMG", tf.transpose(g_img, [0, 2, 3, 1]), 1)
 
@@ -99,7 +93,17 @@ def run_training():
                         tf.get_collection("G_theta"),
                         beta1=FLAGS.beta_1,
                         name="G_train")
+    return g_img, d_loss, g_loss, d_train, g_train
 
+
+def run_training():
+    """Run training."""
+    is_train = tf.placeholder(tf.bool, shape=[], name="is_training")
+    iterators, image, anno = inputs(is_train)
+    noise = tf.random_uniform(
+        tf.stack([tf.shape(anno)[0], FLAGS.prior_dim]), minval=-1, maxval=1)
+    g_img, d_loss, g_loss, d_train, g_train = build_graph(
+        image, anno, is_train, noise)
     summary_op = tf.summary.merge_all()
 
     with tf.Session() as sess:
@@ -110,7 +114,7 @@ def run_training():
         sess.run([itr.initializer for itr in iterators])
         start = time.time()
 
-        epoch = 0
+        epoch = 1
         minibatch_count = 0
         logger.info("[TR] Beginning training.")
         while epoch <= FLAGS.epochs:
@@ -158,7 +162,7 @@ def run_training():
                             "[TE] Est. cum.  disc loss: %g, gen loss: %g" %
                             (running_d/ctr, running_g/ctr))
                         sess.run([itr.initializer for itr in iterators])
-                        break  # ``while True`` block
+                        break  # back to ``while epoch``
                 logger.info(utils.time_update(start, time.time()))
                 logger.info("[TR] Finished test after epoch %g" % epoch)
                 epoch += 1
@@ -207,19 +211,22 @@ def main(_):
         FLAGS.tb_te_path)
     utils.output_overwrite_control(FLAGS.save_folder)
     if not FLAGS.no_save:
+        # then make sure export_dir does NOT exist
         utils.export_dir_overwrite_control(FLAGS.export_dir)
     utils.hparam_file(FLAGS.save_folder, vars(FLAGS))
-    utils.save_config(
-        FLAGS.classes, 
-        filename=os.path.join(FLAGS.save_folder, "classes.json"))
-    run_training()
+    run_training()  # will save model if appropriate, creating export_dir
+    if not FLAGS.no_save:
+        # then save classes list inside export_dir
+        utils.save_config(
+            FLAGS.classes,
+            filename=os.path.join(FLAGS.export_dir, "classes.json"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        "-e", "--epochs", type=int, default=100000,
+        "-e", "--epochs", type=int, default=50,
         help="Number of steps to train.")
     parser.add_argument(
         "-d", "--D_init_rate", type=float, default=.00002,
