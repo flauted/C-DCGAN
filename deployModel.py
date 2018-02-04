@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+"""Test the c-dcgan.
+
+This module expects ``train.py`` to have executed to completion. The JSON is
+written after the training loop terminates.
+"""
 import json
 import sys
 import os

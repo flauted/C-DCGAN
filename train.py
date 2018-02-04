@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Train a Classifier Deep Convolutional GAN on the Celeba dataset"""
+"""Train a Classifier Deep Convolutional GAN on the Celeba dataset."""
 import os
 import time
 import argparse

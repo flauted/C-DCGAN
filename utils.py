@@ -229,7 +229,6 @@ def plot(samples, num_to_plot, save_file, save=True, show=False):
 
 def setup_tb_dir(tb_dir, train_path, test_path):
     """Possibly overwrite and always create TensorBoard directory."""
-    # TensorBoard overwrite control.
     while tf.gfile.Exists(train_path) or tf.gfile.Exists(test_path):
         train_exists = tf.gfile.Exists(train_path)
         test_exists = tf.gfile.Exists(test_path)
